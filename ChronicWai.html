@@ -1,0 +1,469 @@
+<!--  Таймер Оставшегося/Пройденного Времени -- Хроника -->
+<!DOCTYPE html>
+
+<html lang="ru" class="light">
+	<head>
+	<title>Хроника</title>
+		<meta charset="utf-8" />
+		<style type="text/css">
+* {
+	margin: 0;
+	padding: 0;
+}
+html.light {
+	--bodygradient--: linear-gradient( 4deg, rgba(173,252,234,1) 26.8%, rgba(192,229,246,1) 64% );
+	--textcolor--: black;
+}
+html.dark {
+	--bodygradient--: linear-gradient(180deg, #130f40 10%, #000000 50%);
+	--textcolor--: white;
+}
+body {
+	background: fixed #fff var(--bodygradient--) center center no-repeat;
+	transition: linear-gradient 60s ease;
+}
+p, h1, h2, h3, div, label {
+	color: var(--textcolor--);
+	transition: color 0.5s ease;
+}
+		</style>
+	</head>
+	<body class="body">
+		<header>
+			<h1>Хроника</h1>
+			<!-- здесь должен быть "theme_toggle-switch" c чекбокс id="flaf_light-theme" -->
+			<input type="checkbox" class="flag-light" id="flaf_light-theme">
+			<label for="flaf_light-theme" value="light">light</label>
+		</header>
+		<main>
+			<section id="client_section" class="basic_section">
+				<h2>Введите дату в формате дд.мм.гггг:</h2>
+				<input type="text" id="user_date" />
+				<div class="date_example"><p>Например:&nbsp;<p id="next_happyNewYear" class="datelink">01.01.2024 Н.Э.</p></div>
+				<div id="error_bar">Такого месяца не сущесствует</div>
+				<div class="era_toggle-switch">
+					<!-- здесь должен быть "era_toggle-switch" c чекбокс id="flag_era" -->
+					<input type="checkbox" id="flag_era">
+				</div>
+				<button id="chronic_go" class="button disable">Показать</button>
+			</section>
+			<section id="result_section" class="basic_section">
+				<div class="int_box">
+					<div id="dateOut"></div>
+					<div id="timeOut"></div>
+				</div>
+				<button id="chronic_back" class="button enable">Назад</button>
+				<div id="float_box"></div>
+			</section>
+			<section id="chronic_section" class="absolute_section">
+				<div class="chronic_box">
+					<h3>Ранее вы смотрели:</h3>
+					<div id="date_list"></div>
+					<p id="date_list_clear" class="link">Очистить</p>
+				</div>
+			</section>
+		</main>
+		<footer>
+		</footer>
+	</body>
+<script type="text/javascript">
+
+//***** Application Setting *****\\
+
+const names = {
+	flagLightTheme : 'flaf_light-theme',
+	clientSection : 'client_section',
+	input : 'user_date',
+	nextHNY : 'next_happyNewYear',
+	errorBar : 'error_bar',
+	flagEra : 'flag_era',
+	chronicGo : 'chronic_go',
+	/*                             */
+	ResultSection : 'result_section',
+	dateOut : 'dateOut',
+	timeOut : 'timeOut',
+	floatBox : 'float_box',
+	/*                             */
+	chronicSection : 'chronic_section',
+	dateList : 'date_list',
+	datelinkClass : 'datelink',
+	dateListClear : 'dateListClear',
+}
+
+const title = {
+	mill : ['тысячелетие','тысячелетия','тысячелетий'],
+	cent : ['век','века','веков'],
+	year : ['год','года','лет'],
+	month : ['месяц','месяца','месяцев'],
+	week : ['неделя','недели','недель'],
+	days : ['день','дня','дней'],
+	hour : ['час','часа','часов'],
+	min : ['минута','минуты','минут'],
+	sec : ['секунда','секунды','секунд'],
+	ms : ['милисекунда','милисекунды','милисекунд'],
+	getPlur : function (number, words) {
+		words = this[words];
+		if ( ['год','месяц','час'].includes(words[0]) ) {
+			return words[(number % 100 > 4 && number % 100 < 20) ? 2 : [2, 0, 1, 1, 1, 2][(number % 10 < 5) ? Math.abs(number) % 10 : 5]];
+		} return words[(number === 1) ? 0 : (number > 1 && number < 5) ? 1 : 2];
+	},
+	getSimp : function (word) {
+		return this[word.slice(0,-1)][2];
+	}
+}
+
+/*********************************/
+
+class Era
+{
+constructor ( key ) {
+	this._key = key
+}
+cls ( ) {
+	window.localStorage.removeItem( this._key );
+}
+get ( ) {
+	return Era.getValue( this._key );
+}
+set ( value ) {
+	this.cls();
+	Era.setValue( this._key, value );
+}
+static toStr ( sprite ) {
+	return JSON.stringify( sprite );
+}
+static toPar ( string ) {
+	return JSON.parse( string );
+}
+static getValue ( key ) {
+	return Era.toPar( window.localStorage.getItem( key ) );
+}
+static setValue ( key, value ) {
+	window.localStorage.setItem( key, (Era.toStr(value)) );
+}
+static cls ( ) {
+	window.localStorage.clear();
+}
+
+ }
+
+class Story
+{
+constructor( key )  {
+	this._era = new Era (key);
+	this.value = this.$value();
+}
+$value ( ) {
+	const value = this._era.get();
+	if ( value === null ) {
+		return new Array ( );
+	} return value;
+}
+clear ( ) {
+	this.value = new Array ( );
+	this._era.set(value);
+}
+get ( ) {
+	return this.value;
+}
+add ( date ) {
+	let value = this.value;
+	if ( value.indexOf(date) !== -1 ) {
+		value.filter( s => { return s !== value } );
+	}
+	value.unshift(date);
+	if ( value.length > 4 ) {
+		value.pop();
+	}
+	this.value = value;
+	this._era.set(this.value);
+}
+
+ }
+
+class Box
+{
+constructor ( box ) {
+	this.$box = Box.get( box );
+}
+style ( func ) {
+	const style = this.$box.style;
+	if ( func === undefined ) {
+		return style;
+	} func(style);
+}
+getChildWith ( className ) {
+	const child = this.$box.children;
+	let list = new Array( );
+	for (let i = 0; i < child.length; i++) {
+		if ( child[i].classList.value.includes(className) ) {
+			list.push( child[i] );
+		}
+	}
+	return list;
+}
+getCon ( ) {
+	const box = this.$box;
+	const $func = Box.getOutMethod(box);
+	if ( $func === null ) {
+		return 'Box OutContent Error';
+	} return box[$func];
+}
+outCon ( value, add ) {
+	value = ( value === undefined ) ? '' : value;
+	const box = this.$box;
+	const $func = Box.getOutMethod(box);
+	if ( $func === null ) {
+		console.log(`Box OutContent Error:\nbox : ${box}, id : ${box.id} value : ${value}`);
+	} else {
+		box[$func] = (add) ? box[$func] + value : value;
+	} return box[$func];
+}
+static getOutMethod ( box ) {
+	box = box.tagName;
+	if ( box === 'P' ) {
+		return 'textContent';
+	} else if ( box === 'DIV' || box === 'SPAN' ) {
+		return 'innerHTML';
+	} else if ( box === 'INPUT' ) {
+		return 'value'
+	} return null;
+}
+static get ( name ) {
+	let id = document.getElementById(name);
+	if ( id ) {
+		return id;
+	} return document.getElementsByClassName(name);
+}
+static tag ( name ) {
+	return document.getElementsByTagName( name );
+}
+static selector ( querySelector ) {
+	return document.querySelectorAll( querySelector );
+}
+
+ }
+
+class Button extends Box
+{
+constructor ( box ) {
+	super(box);
+}
+on ( func ) {
+	const box = this.$box;
+	if ( box.length ) {
+		for (let i = 0; i < box.length; i++) {
+			box[i].addEventListener( 'click', func );
+		}
+	} else {
+		box.addEventListener( 'click', func );
+	}
+}
+getPosition (  ) {
+	return this.$box.classList.contains('enable');
+}
+turnPosition ( status ) {
+	const position = this.getPosition();
+	if ( status !== position ) {
+		const list = this.$box.classList;
+		if ( status === undefined ) { status = !position }
+		status = (status) ? 'enable' : 'disable';
+		position = (position) ? 'enable' : 'disable';
+
+		list.toggle(position);
+		list.toggle(status);
+	} 
+}
+
+ }
+
+class Input extends Box
+{
+constructor ( box ) {
+	super(box);
+}
+inp ( func ) {
+	this.$box.addEventListener( 'input', func );
+}
+
+ }
+
+class Flag extends Box
+{
+constructor ( box ) {
+	super(box);
+}
+checked ( func ) {
+	this.$box.addEventListener( 'change', func );
+}
+getCon ( ) {
+	return this.$box.checked;
+ }
+outCon ( bool ) {
+	const box = this.$box;
+	bool = (bool === undefined) ? !box.checked : bool;
+	box.checked = bool;
+	return bool;
+}
+
+ }
+
+class ToggleSwitch extends Flag
+{
+constructor ( box, label ) {
+	super(box);
+}
+
+
+
+ }
+
+class Theme{
+constructor ( flag ) {
+	this.flag = new Flag (flag);
+	this.html = (Box.tag('html')[0]).classList;
+	this.setTheme();
+	this.flag.checked( this.setTheme.bind(this) );
+}
+setTheme ( theme ) {
+	let status = this.html.contains('light');
+	if ( theme === undefined ) {
+		theme = !(window.matchMedia("(prefers-color-scheme: dark)").matches);
+	} else {
+		theme = theme.target.checked;
+	}
+	if ( status !== theme ) {
+		status = (status) ? 'light' : 'dark';
+		theme = (theme) ? 'light' : 'dark';
+
+		this.html.toggle(status);
+		this.html.toggle(theme);
+	}
+}
+
+ }
+
+class Mask
+{
+constructor ( inpbox ) {
+	this.input = inpbox;
+	this.previous = '';
+	this.input.inp( this.run.bind(this) );
+}
+reset ( ) {
+	this.previous = '';
+}
+run ( event ) {
+	let value = event.target.value;
+	let len = value.length;
+	let last = value.slice(-1);
+	let untilast = value.slice(0, -1);
+	let diff = len - this.previous.length;
+
+	if ( diff > 1 ) {
+		value = this.previous;
+	}
+	if ( diff === 1 ) {
+		if ( isNaN(+(last)) || last === ' ') {
+			value = untilast;
+		} else if ( len === 2 || len === 5 ) {
+			value = `${value}.`;
+		} else if ( len === 3 || len === 6 && last !== '.' ) {
+			value = `${untilast}.${last}`;
+		}
+	}
+	if ( diff === -1 ) {
+		if ( last === '.' ) {
+			value = untilast;
+		}
+	}
+	this.previous = value;
+	this.input.outCon(value);
+}
+
+ }
+
+class Validate
+{
+constructor ( main, input, flag, bar ) {
+	this.main = main;
+	this.input = input;
+	this.flag = flag;
+	this.bar = bar;
+	//this.redInput = new RedInput (input);
+	this.$run();
+}
+$run ( ) {
+	const func = this.check.bind(this);
+	this.input.inp( func );
+	this.flag.checked( func );
+	this.main.valid(false);
+}
+check ( ) {
+	const value = this.input.getCon();
+	const isAc = this.flag.getCon();
+	//checking...
+}
+resultOut ( result ) {
+	this.bar.out(result);
+	if ( !result.length && this.input.value.length > 6 ) {
+		this.main.valid(true);
+	}
+}
+
+
+ }
+class Section
+{
+constructor ( main, section, button ) {
+	this.main = main;
+	this.section = new Box (section);
+	this.button = new Button (button);
+}
+hideSection ( ) {
+	this.section.style().display = 'none';
+}
+showSection ( ) {
+	this.section.style().display = 'block';
+}
+
+ }
+
+class UserSection extends Section
+{
+constructor ( main, names ) {
+	super(main, names.clientSection, names.chronicGo);
+	this.input = new Input (names.input);
+	this.flagEra = new ToggleSwitch (names.flagEra);
+	this.bar = new Box (names.bar);
+
+	this.mask = new Mask (this.input);
+	this.validate = new Validate (this, this.input, this.flagEra, this.bar);
+	this.theme = new Theme (names.flagLightTheme);
+
+	this.$run();
+}
+$run (  ) {
+	this.button.on( this.main.next.bind(this.main) );
+}
+valid ( bool ) {
+	
+}
+
+ }
+
+class ChronicWai
+{
+constructor ( set ) {
+	set = (typeof set === 'object') ? set : names;
+	this.userSection = new UserSection (this, set);
+}
+next ( id ) {
+	id = id.target.id;
+	alert(id);
+}
+
+ } let chronicWai = new ChronicWai( );
+
+</script>
+</html>

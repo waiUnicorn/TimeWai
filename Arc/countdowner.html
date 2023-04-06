@@ -1,0 +1,190 @@
+
+<!----------------------------------------------------------------------------------------(с)wai-->
+<!-- Программа обратного отсчёта времени -->
+<!DOCTYPE html><html>
+<head>
+<title>Таймер времени</title>
+<meta charset="utf-8" />
+
+<style type="text/css">
+	#inputError {
+		position: absolute;
+		color: red;
+		background: none;
+		border: transparent;
+		
+	}
+	.block {
+		display: block;
+	}
+	.none {
+		display: none;
+	}
+	.red {
+		color: red;
+	}
+	
+
+</style>
+
+</head>
+<script type="text/javascript">
+
+function get ( selectorName ) {
+	let id = document.getElementById(selectorName);
+	let cl = document.getElementsByClassName(selectorName);
+	return ( id !== null ) ? id : ( cl.length > 0 ) ? cl : undefined;
+}
+
+function launch ( ) {
+
+}
+
+function Input ( input, message ) {
+
+	this.input = get(input);
+	this.messages = get(message);
+	this.previous = this.input.value;
+	let that = this;
+	
+	this.past = function ( str ) {
+		this.input.value = str;
+	}
+	this.write = function ( str ) {
+		this.messages.innerHTML = str;
+	}
+	
+	this.feature = function ( ) {
+	
+		this.value = this.Mask();
+		this.validate = this.Validate();
+		this.past(this.value); this.write(this.validate);
+		
+	}
+	
+	this.Mask = function ( ) {
+		
+		let value = this.input.value;
+		let result;
+		this.last = value.slice(-1);
+		this.untilast = value.replace(/.$/,'');
+		this.length = value.length;
+		this.difference = this.length - this.previous.length;
+		
+		
+		
+		if ( this.difference > 1 ) {
+		//Если копипаст, ввода не происходит
+			result = this.previous;
+		}
+		if ( this.difference === 1 ) {
+		//Если текущее значение длинее предыдущего
+			if ( isNaN( +(this.last) ) ) {
+			//Если значение не цифра
+				result = this.untilast;
+			} else if ( this.length === 2 || this.length === 5 ) {
+			//Вставка точки после 2 и 5 символа
+				result = `${value}.`;
+			} else if ( this.length === 3 || this.length === 6 ) {
+			//Исправление при корректировке даты
+				result = `${this.untilast}.${this.last}`;
+			}
+		} else {
+			if ( this.last === '.' ) {
+			//Иначе и если точка удаляется самостоятельно
+				result = this.untilast;
+			}
+		}
+	
+		this.previous = (result!==undefined) ? result : value;
+		return this.previous;
+	}
+	
+	this.Validate = function ( ) {
+	
+		function quantity(month) {
+			if ( month>0 && month<13 ) {
+				return 28 + (month + Math.floor(month/8)) % 2 + 2 % month + 2 * Math.floor(1/month);
+			} else {
+				return 0;
+			}
+		}
+		function leap(year) {
+			return ((year % 4 == 0) && (year % 100 != 0)) || (year % 400 == 0);
+		}
+		
+		let value = this.input.value;
+		let length = value.length;
+		let message = '';
+		
+		this.day = (length>1)?value.slice(0,2):false;
+		this.month = (length>4)?value.slice(3,5):false;
+		this.year = (length===9)?value.slice(6):false;
+		
+		if (this.day) {
+			this.day = +this.day;
+			if ( this.day<1 || this.day>31 ) {
+				message += 'Таких чисел в месяце не бывает. ';
+			}	
+		}
+		if (this.month) {
+			this.month = +this.month;
+			if ( this.month<1 || this.month>12 ) {
+				message += 'Такого месяца не бывает. ';
+			} else {
+				if ( this.day>29 && this.month===2 || this.day>(quantity(this.month)) && this.month!==2 ) {
+					message += 'Такого числа в этом месяце не существует. ';
+				}
+			}
+		}
+		if (this.year) {
+			this.year = +this.year;
+			if ( this.month===2 && this.day===29 && !leap(this.year) ) {
+				message += 'В этом году февраль не високосный. ';
+			}
+		}
+		return message;
+	}
+	
+	
+	this.input.addEventListener ('input', function () {
+		that.feature();
+	});
+}
+
+window.onload = function ( ) {
+	let input = new Input ( 'input', 'messagesError' );
+	let up = get('inputError');
+	let down = get('input');
+	let comp = down.getBoundingClientRect().y + window.pageYOffset + 10;
+	up.setAttribute( 'style',`top:${comp}px`);
+	down.addEventListener('input', function () {
+		up.style.width = down.value.length + 'ch';
+		up.value = down.value;
+	});
+	
+	if(!-5) alert();
+};
+
+
+</script>
+<body>
+		<input id="inputError" maxlength="10" />
+ <div id="content">
+	<div class="area block">
+		<p>Утилитка какая-то, которая если вы введёте дату, может показать сколько времени осталось до введенной даты. Ну или, если вы ввели прошедшую дату, сколько времени прошло.</p>
+		<p>Введите дату в формате дд.мм.гггг:</p>
+		<input id="input" maxlength="10" autofocus />
+
+		<p class="examp">Например <span id="sampleOfexamp"></span>
+		<p id="messagesError" class="red"></p>
+ 	</div>
+ 	<div class="area none">
+ 		<p>Это из ДИВа final</p>
+ 	</div>
+ 	<div id="button">
+ 		<button id="go">тыкнуть</button>
+ 	</div>
+ </div>
+ 
+</body></html>

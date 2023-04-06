@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>?</title>
+	<style type="text/css">
+		.toggle-switch_theme {
+	position: relative;
+	margin: 50px;
+}
+.toggle-switch_input {
+	display: none;
+}
+.switch_theme {
+	display: inline-block;
+	position: relative;
+	width: 60px;
+	height: 35px;
+	border-radius: 50px;
+}
+.slider_theme {
+	position: absolute;
+	cursor: pointer;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	left: 0;
+	border-radius: 50px;
+	background-color: #ccc;
+}
+.slider_theme::before {
+	content: "";
+	position:absolute;
+	cursor:pointer;
+	left: 4px;
+	bottom: 4px;
+	width: 26px;
+	height: 26px;
+	border-radius: 50px;
+	background-color: #fff;
+}
+.toggle-switch_input:checked ~ .slider_theme::before {
+	transform:translateX(26px);
+}
+.body:not(:has(.flag-light:checked)) {
+	/*background: fixed #fff linear-gradient(180deg, #130f40 10%, #000000 50%) center center no-repeat;*/
+	transition: background 0.8s ease;
+}
+.body:has(.flag-light:checked) {
+	/*background: fixed #fff linear-gradient( 4deg, rgba(173,252,234,1) 26.8%, rgba(192,229,246,1) 64% ) center center no-repeat;*/
+	transition: background 1s ease;
+}
+	</style>
+</head>
+<body>
+<div class="toggle-switch_theme">
+				<label class="switch_theme">
+					<input type="checkbox" class="toggle-switch_input" id="themelight" />
+					<span class="slider_theme"></span>
+				</label>
+			</div>
+</body>
+</html>

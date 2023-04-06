@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+
+<html>
+	<head>
+	<title></title>
+	</head>
+	<div id="out"></div>
+	<button id="b">mblk</button>
+<!-- JavaScript -->
+<script type="text/javascript">'use strict';
+const client = {
+	area : 'start',
+	input : 'input',
+	button : 'execute',
+};
+const cling = {
+	area : 'cling',
+};
+
+const result = {
+	area : 'result',
+	button : 'tostart',
+}
+
+const title = {
+	mill : ['тысячелетие','тысячелетия','тысячелетий'],
+	cent : ['век','века','веков'],
+	year : ['год','года','лет'],
+	month : ['месяц','месяца','месяцев'],
+	week : ['неделя','недели','недель'],
+	days : ['день','дня','дней'],
+	hour : ['час','часа','часов'],
+	min : ['минута','минуты','минут'],
+	sec : ['секунда','секунды','секунд'],
+	ms : ['милисекунда','милисекунды','милисекунд'],
+	getPlur : function (number, words) {
+		words = this[words];
+		if ( ['год','месяц','час'].includes(words[0]) ) {
+			return words[(number % 100 > 4 && number % 100 < 20) ? 2 : [2, 0, 1, 1, 1, 2][(number % 10 < 5) ? Math.abs(number) % 10 : 5]];
+		} return words[(number === 1) ? 0 : (number > 1 && number < 5) ? 1 : 2];
+	},
+	getSimp : function (word) {
+		return this[word.slice(0,-1)][2];
+	},
+}
+
+class Chronic
+{
+constructor ( userdate, isBC) {
+	this.userdate = userdate;
+	this.isBC = isBC;
+	this.final = Chronic.userDate(userdate, isBC);
+	this.final.setHours(0);
+	Date.prototype.daysInMonth = function() {return 32 - new Date(this.getFullYear(), this.getMonth(), 32).getDate()};
+	this.refreshTime(); // Adds the necessary calculated properties
+}
+refreshTime ( ) {
+	this.now = new Date( );
+	this.time = this.final.getTime() - this.now.getTime();
+	this.delta = this.$delta(); //this.delta is 1 - "прошло", 0 - "осталось".
+	
+	this.fweek = (this.time / Chronic.MSwek).toFixed(2);
+	this.fmonth = (this.fweek / 4.5).toFixed(2);
+	this.
+	this.fday = (this.time / Chronic.MSday).toFixed(2);
+	this.fhour = (this.time / Chronic.MShour).toFixed(2);
+	this.fmin = (this.time / Chronic.MSmin).toFixed(2);
+	this.fsec = (this.time / Chronic.MSsec).toFixed(2);
+	
+	this.phour = Math.floor(this.fhour);
+	this.pmin = this.$getMoment( this.now.getMinutes() );
+	this.psec = this.$getMoment( this.now.getSeconds() );
+	
+	this.test();
+}
+$delta ( ) {
+	const time = this.time;
+	this.time = Math.abs(time);
+	return (time < 0) ? 1 : 0;
+}
+$getMoment ( minOrSec ) {
+	if ( !this.delta ) {
+		return (minOrSec !== 0) ? 60 - minOrSec : 0;
+	} return minOrSec;
+}
+$month ( ) {
+	return Math.abs( this.final.getMonth() - this.now.getMonth() + (12 * (this.final.getFullYear() - this.now.getFullYear()))-1 );
+}
+$cent ( ) {
+	if ( this.Pyear > 100 ) {
+		let cent = Math.floor(this.Pyear / 100);
+		if ( cent > 2 ) { cent++ }
+		return cent;
+	} return 0;
+}
+static $concat ( c, o ) {
+	return Number( String(c) + '.' + String(o).split('.')[1] );
+}
+static MSinYear ( year, isBC ) {
+	if ( year && isBC ) {
+		return Chronic.MSday * (Chronic.isLeapYear(year, isBC)) ? 366 : 365;
+	} return Chronic.MSday * 365.4;
+}
+static MSsec = 1000;
+static MSmin = Chronic.MSsec * 60;
+static MShour = Chronic.MSmin * 60;
+static MSday = Chronic.MShour * 24;
+static MSwek = Chronic.MSday * 7;
+
+static userDate ( date, isBC ) {
+	date = date.split('.').reverse();
+	let year = date[0];
+	if ( isBC ) { year = year - 1 }
+	if ( isBC && year !== 0 ) {
+		return new Date( -year, (date[1] - 1), date[1] );
+	} else {
+		year = String(year);
+		while (year.length <= 3) {
+			year = '0' + year;
+		}
+		date[0] = year;
+		return new Date( date.join('-') );
+	}
+}
+static nextNewHappyYear ( ) {
+	return '01.01.' + (new Date().getFullYear + 1);
+}
+static isLeapYear ( year, isBC ) {
+	let date = Chronic.userDate( ('29.02.' + year), isBC );
+	return (date.getMonth() + 1) === 2;
+}
+test () {
+	let s = '';
+	for(let key in this) {
+		s += '<p>'+key+' : '+this[key]+'</p>';
+	}
+	document.write( s );
+}
+ }
+var i = new Chronic( '03.05.2023', false );
+</script>
+	</body>
+</html>

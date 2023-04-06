@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title></title>
+</head>
+<body id="b">
+<script type="text/javascript">
+/////////////
+
+function nextNewYear ( ) {
+	return new Date ( (new Date().getFullYear()) + 1, 0, 1 );
+}
+function userDate ( ru_date ) {
+	return new Date ( ru_date.split('.').reverse().join('-') );
+}
+
+////////////
+function TIME (date)
+{
+function getq (t) {
+	return new Date(t.getFullYear(), t.getMonth()+1, 0).getDate();
+}
+function r (num) {
+	return Math.round( num );
+}
+function f ( num ) {
+	return +(num.toFixed(2));
+}
+	var T = new Date ();
+	this.date = userDate (date);
+	this.MS = this.date.getTime() - T.getTime();
+	this.S = r( this.MS / 1000 );
+	this.M = r(this.S / 60);
+	this.H = r(this.M / 60);
+	this.D = r(this.H / 24);
+	this.dd = getq(T) - T.getDate() + this.date.getDate();
+	this.W = r(this.D / 7);
+	this.Mo = (this.date.getMonth() - T.getMonth() + (12 * (this.date.getFullYear() - T.getFullYear()))-1);
+	this.Year = (this.date.getFullYear() - T.getFullYear()) -1;
+	this.Cen = (Math.abs(this.Year)>100)?(this.Year / 100):0;
+	this.Mil = (Math.abs(this.Cen)>10)?(this.Year / 1000):0;
+	
+	this.echo = function () {
+		return ` До даты ${date} осталось:<br>
+				${this.MS} милисекунд<br>
+				${this.S} секунд<br>
+				${this.H} часов<br>
+				${this.D} дней<br>
+				${this.W} недель<br>
+				${this.Mo} месяцев и ${this.dd} дней<br>
+				${this.Year} лет<br>
+				${this.Cen} веков<br>
+				${this.Mil} тысячелетий<br>`
+	}
+	
+}
+
+function i (n) { return Math.floor(n) }
+function quantity(month,year) {
+	if (month == 2 && leap(year)){
+		return 29;
+	} else {
+		return 28 + (month + Math.floor(month/8)) % 2 + 2 % month + 2 * Math.floor(1/month);
+	}
+}
+function leap(year) {
+	return ((year % 4 == 0) && (year % 100 != 0)) || (year % 400 == 0);
+}
+var i = new TIME ('01.01.2024');
+document.getElementById('b').innerHTML = i.echo();
+
+/*
+var now = new Date();
+var nowY = now.getFullYear();
+var nowM = now.getMonth()+1;
+var req = new Date('2024-01-01');
+var ms = req.getTime()-now.getTime();
+var s = i(ms/1000);
+var m = i(s/60);
+var h = i(m/60);
+var d = i(h/24)+1;
+var remD = d, D = now.getDate(), Y = nowY, M = nowM, i = 0;
+
+while (remD > 28) {
+	if (i===0) {
+	alert(remD);
+		remD = remD - (quantity(M,Y) - (D+1)=);
+	}
+	remD = remD - quantity(M,Y);
+	i++; M++;
+	if (M==13) { Y++; M=1 }
+	alert('qM '+ i+', '+'qd '+remD+ '/'+quantity(M,Y) );
+}
+alert('qM '+ i+', '+'qd '+remD+ '/'+quantity(M,Y) );
+
+
+
+
+//alert( ` Осталось грубо: ${Y}/${M}/${d} - ${h}:${m}:${s} ` );
+*/
+</script>
+</body>
+</html>

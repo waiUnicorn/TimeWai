@@ -26,6 +26,38 @@ p, h1, h2, h3, div, label {
 	color: var(--textcolor--);
 	transition: color 0.5s ease;
 }
+/*button styles*/
+button {
+	-webkit-appearance: none;
+	-moz-appearance: none;
+	appearance: none;
+	border: 0;
+	border-radius: 0;
+	background: #ccc;
+}
+.button {
+	appearance: none;
+	border: 0;
+	border-radius: 5px;
+	background: #4676D7;
+	color: #fff;
+	padding: 8px 16px;
+	font-size: 16px;
+	min-width: 100px;
+	margin: 10px 0 15px 50px;
+}
+.enabled:active, .enabled:hover {
+	outline: none;
+	box-shadow: 0 0 0 4px #cbd6ee;
+}
+.enabled:active {
+	background: #1d49aa;
+}
+.disabled {
+	color: #d2d5db;
+	background: #6c7589;
+	cursor: not-allowed;
+}
 		</style>
 	</head>
 	<body class="body">
@@ -40,19 +72,19 @@ p, h1, h2, h3, div, label {
 				<h2>Введите дату в формате дд.мм.гггг:</h2>
 				<input type="text" id="user_date" />
 				<div class="date_example"><p>Например:&nbsp;<p id="next_happyNewYear" class="datelink">01.01.2024 Н.Э.</p></div>
-				<div id="error_bar">Такого месяца не сущесствует</div>
+				<div id="error_bar"></div>
 				<div class="era_toggle-switch">
 					<!-- здесь должен быть "era_toggle-switch" c чекбокс id="flag_era" -->
-					<input type="checkbox" id="flag_era">
+					<input type="checkbox" id="flag_era" checked />н.э.
 				</div>
-				<button id="chronic_go" class="button disable">Показать</button>
+				<button id="chronic_go" class="button disabled" disabled="true">Показать</button>
 			</section>
 			<section id="result_section" class="basic_section">
 				<div class="int_box">
 					<div id="dateOut"></div>
 					<div id="timeOut"></div>
 				</div>
-				<button id="chronic_back" class="button enable">Назад</button>
+				<button id="chronic_back" class="button enabled">Назад</button>
 				<div id="float_box"></div>
 			</section>
 			<section id="chronic_section" class="absolute_section">
@@ -184,7 +216,7 @@ add ( date ) {
 class Box
 {
 constructor ( box ) {
-	this.$box = Box.get( box );
+	this.$box = (box.nodeType) ? box : Box.get( box );
 }
 style ( func ) {
 	const style = this.$box.style;
@@ -260,18 +292,23 @@ on ( func ) {
 	}
 }
 getPosition (  ) {
-	return this.$box.classList.contains('enable');
+	return this.$box.classList.contains('enabled');
 }
 turnPosition ( status ) {
-	const position = this.getPosition();
+	let position = this.getPosition();
 	if ( status !== position ) {
 		const list = this.$box.classList;
 		if ( status === undefined ) { status = !position }
-		status = (status) ? 'enable' : 'disable';
-		position = (position) ? 'enable' : 'disable';
+		status = (status) ? 'enabled' : 'disabled';
+		position = (position) ? 'enabled' : 'disabled';
 
 		list.toggle(position);
 		list.toggle(status);
+		if ( status === 'disabled') {
+			this.$box.setAttribute('disabled',true);
+		} else {
+			this.$box.removeAttribute('disabled');
+		}
 	} 
 }
 
@@ -284,6 +321,12 @@ constructor ( box ) {
 }
 inp ( func ) {
 	this.$box.addEventListener( 'input', func );
+}
+hide ( ) {
+	super.style().display = 'none';
+}
+show ( ) {
+	super.style().display = 'block';
 }
 
  }
@@ -314,11 +357,10 @@ constructor ( box, label ) {
 	super(box);
 }
 
-
-
  }
 
-class Theme{
+class Theme
+{
 constructor ( flag ) {
 	this.flag = new Flag (flag);
 	this.html = (Box.tag('html')[0]).classList;
@@ -388,9 +430,9 @@ class Validate
 constructor ( main, input, flag, bar ) {
 	this.main = main;
 	this.input = input;
-	this.flag = flag;
+	this.flag = flag; //isAC
 	this.bar = bar;
-	//this.redInput = new RedInput (input);
+	this.redInput = new RedInput (input);
 	this.$run();
 }
 $run ( ) {
@@ -401,18 +443,92 @@ $run ( ) {
 }
 check ( ) {
 	const value = this.input.getCon();
-	const isAc = this.flag.getCon();
-	//checking...
-}
-resultOut ( result ) {
-	this.bar.out(result);
-	if ( !result.length && this.input.value.length > 6 ) {
-		this.main.valid(true);
-	}
-}
+	const isAC = this.flag.getCon();
+	const length = value.length;
+	const not = 'не существует.';
+	let result = '';
+	
+	const day = (length > 1) ? +value.slice(0,2) : false;
+	const month = (length > 4) ? +value.slice(3,5) : false;
+	const year = (length > 6) ? +value.slice(6) : false;
 
+	if ( day !== false && day < 1 || day > 31 ) {
+		result += `Даты с числом ${day} ${not}`;
+	}
+	if ( month !== false ) {
+		if ( month < 1 || month > 13 ) {
+			result += ` Месяца ${month} в году ${not} `;
+		} else {
+			if ( day > Time.daysInMonth(month) ) {
+				result += ` В ${Time.monthWord(month)} числа ${day} ${not}`;
+			}
+		}
+	}
+	if ( year !== false ) {
+		if ( year === 0 ) {
+			result += ` Нулевого года ${not}`;
+		} else if ( month === 2 ) {
+			if ( !Time.isLeapYear(year,(!isAC)) && day === 29 ) {
+				result += `${year}-й год ${((!isAC)?'до ':'')}н.э. не високосный.`;
+			}
+		}
+	}
+	
+	this.bar.outCon(result,false);
+	this.main.valid( result.length === 0 && this.input.getCon().length > 6);
+}
 
  }
+
+class RedInput
+{
+constructor ( input ) {
+	this.input = input;
+	
+	this.red = this.$create();
+	this.red.style( this.$style.bind(this) );
+	this.red.show();
+	this.red.outCon('готогогого');
+}
+$create ( ) {
+	let red = document.createElement('input');
+	Box.tag('main')[0].appendChild(red);
+	return new Input (red);
+}
+$style ( $ ) {
+	$.display = 'none';
+	$.position = 'absolute';
+	$.background = 'none';
+	$.color = 'red';
+	$.border = 'transparent';
+	$.outline = 'none';
+	$.top = (this.input.$box.getBoundingClientRect().y + window.pageYOffset) + 'px';
+	$.width = this.input.getCon.length + 'ch'
+}
+
+ }
+
+class Time
+{
+static daysInMonth ( month ) {
+	if ( month !== 2 ) {
+		return 28 + (month + Math.floor(month/8)) % 2 + 2 % month + 2 * Math.floor(1/month);
+	} return 29
+}
+static isLeapYear ( year, isBC ) {
+	if ( isBC ) {
+		year--;
+	}
+	return ((year % 4 == 0) && (year % 100 != 0)) || (year % 400 == 0);
+}
+static monthWord ( month, nom ) {
+	const words = [ "январ","феврал","март","апрел","ма","июн","июл","август","сентябр","октябр","ноябр","декабр" ];
+	month--;
+	return words[month] + ( (nom === undefined || nom === false) ? 'е' : (month === 2 || month === 7) ? '' : (month === 4) ? 'й' : 'ь' );
+}
+
+ }
+
 class Section
 {
 constructor ( main, section, button ) {
@@ -435,7 +551,7 @@ constructor ( main, names ) {
 	super(main, names.clientSection, names.chronicGo);
 	this.input = new Input (names.input);
 	this.flagEra = new ToggleSwitch (names.flagEra);
-	this.bar = new Box (names.bar);
+	this.bar = new Box (names.errorBar);
 
 	this.mask = new Mask (this.input);
 	this.validate = new Validate (this, this.input, this.flagEra, this.bar);
@@ -447,7 +563,7 @@ $run (  ) {
 	this.button.on( this.main.next.bind(this.main) );
 }
 valid ( bool ) {
-	
+	this.button.turnPosition( bool );
 }
 
  }
